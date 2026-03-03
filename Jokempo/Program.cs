@@ -1,164 +1,291 @@
 ﻿using System;
+
 using System.Collections.Generic;
 
-Dictionary<string, (int vitórias, int empates, int derrotas)> jogadores = new Dictionary<string, (int, int, int)>();
+class Program
 
-Console.OutputEncoding = System.Text.Encoding.UTF8;
-
-Console.WriteLine("😀 Olá! Vamos jogar Jokempo?");
-Console.WriteLine("1 - Sim ou 0 - Não");
-
-var continuar = ValidarEntrada('0', '1');
-
-while (continuar != '0')
 {
-    string nomeJogador = ObterNomeJogador();
 
-    if (!jogadores.ContainsKey(nomeJogador))
+    static Dictionary<string, (int vitorias, int empates, int derrotas)> jogadores
+
+        = new Dictionary<string, (int, int, int)>();
+
+    static Random random = new Random();
+
+    static void Main()
+
     {
-        jogadores[nomeJogador] = (0, 0, 0);
+
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+        ExibirMensagemInicial();
+
+        while (true)
+
+        {
+
+            string jogadorAtual = ObterOuCriarJogador();
+
+            JogarPartidas(jogadorAtual);
+
+            char opcaoFinal = MenuFinal();
+
+            if (opcaoFinal == '0')
+
+                break;
+
+            if (opcaoFinal == '2')
+
+                ExibirEstatisticas();
+
+        }
+
+        Console.WriteLine("\n👋 Até a próxima!");
+
     }
 
-    Console.WriteLine($"Bem-vindo, {nomeJogador}! Vamos começar...");
+    // =========================
 
-    do
+    // MÉTODOS PRINCIPAIS
+
+    // =========================
+
+    static void ExibirMensagemInicial()
+
     {
-        char opcao = ObterOpcaoJogador();
-        var opcaoPC = new Random().Next(3);
-        bool vitoria = JogarRodada(opcao, opcaoPC, nomeJogador);
-        AtualizarEstatisticas(nomeJogador, vitoria, opcao, opcaoPC);
 
-        Console.WriteLine("\nQuer jogar de novo?");
-        Console.WriteLine("1 - Sim, 0 - Não");
-    } while (Console.ReadKey().KeyChar == '1');
+        Console.WriteLine("😀 Olá! Vamos jogar Jokempô?");
 
-    Console.WriteLine("\nO que deseja fazer agora?");
-    Console.WriteLine("1 - Continuar com outro jogador, 2 - Listar jogadores e estatísticas, 0 - Sair");
-    continuar = ValidarEntrada('0', '1', '2');
+        Console.WriteLine("Pressione qualquer tecla para começar...");
 
-    if (continuar == '2')
-    {
-        ListarEstatisticasJogadores(ref continuar);
-    }
-}
+        Console.ReadKey();
 
-Console.WriteLine("👋 Tchau! Até a próxima");
-
-char ValidarEntrada(params char[] opcoesValidas)
-{
-    char opcao = Console.ReadKey().KeyChar;
-    while (Array.IndexOf(opcoesValidas, opcao) == -1)
-    {
-        Console.WriteLine("\nOpção inválida. Tente novamente.");
-        opcao = Console.ReadKey().KeyChar;
-    }
-    return opcao;
-}
-
-// Métodos auxiliares
-string ObterNomeJogador()
-{
-    Console.WriteLine("\nQual é o seu nome?");
-    string nomeJogador = Console.ReadLine();
-
-    while (string.IsNullOrEmpty(nomeJogador))
-    {
-        Console.WriteLine("Você precisa digitar o seu nome. Pode ser o seu apelido...");
-        nomeJogador = Console.ReadLine();
     }
 
-    return nomeJogador;
-}
+    static string ObterOuCriarJogador()
 
-char ObterOpcaoJogador()
-{
-    Console.WriteLine("Escolha uma opção: 0 - Pedra ✊, 1 - Papel ✋ ou 2 - Tesoura ✌");
-    char opcao = Console.ReadKey().KeyChar;
-    while (opcao != '0' && opcao != '1' && opcao != '2')
     {
-        Console.WriteLine("\nOpção inválida. Escolha 0, 1 ou 2.");
-        opcao = Console.ReadKey().KeyChar;
-    }
-    return opcao;
-}
 
-bool JogarRodada(char opcao, int opcaoPC, string nomeJogador)
-{
-    bool vitoria = false;
+        Console.WriteLine("\nDigite o nome do jogador:");
 
-    switch (opcao)
-    {
-        case '0':
-            Console.WriteLine("\nVocê escolheu Pedra ✊!");
-            vitoria = (opcaoPC == 2);
-            break;
-        case '1':
-            Console.WriteLine("\nVocê escolheu Papel ✋");
-            vitoria = (opcaoPC == 0);
-            break;
-        case '2':
-            Console.WriteLine("\nVocê escolheu Tesoura ✌");
-            vitoria = (opcaoPC == 1);
-            break;
+        string nome = Console.ReadLine();
+
+        while (string.IsNullOrWhiteSpace(nome))
+
+        {
+
+            Console.WriteLine("Nome inválido. Digite novamente:");
+
+            nome = Console.ReadLine();
+
+        }
+
+        if (!jogadores.ContainsKey(nome))
+
+        {
+
+            jogadores[nome] = (0, 0, 0);
+
+        }
+
+        return nome;
+
     }
 
-    switch (opcaoPC)
+    static void JogarPartidas(string jogador)
+
     {
-        case 0:
-            Console.WriteLine("\nEu escolhi Pedra ✊!");
-            break;
-        case 1:
-            Console.WriteLine("\nEu escolhi Papel ✋");
-            break;
-        case 2:
-            Console.WriteLine("\nEu escolhi Tesoura ✌");
-            break;
+
+        char continuar;
+
+        do
+
+        {
+
+            int escolhaJogador = ObterEscolhaJogador();
+
+            int escolhaPC = random.Next(0, 3);
+
+            string resultado = DeterminarResultado(escolhaJogador, escolhaPC);
+
+            AtualizarEstatisticas(jogador, resultado);
+
+            Console.WriteLine($"\nResultado: {resultado}");
+
+            Console.WriteLine("\nJogar novamente? 1 - Sim | 0 - Não");
+
+            continuar = ValidarEntrada('0', '1');
+
+        } while (continuar == '1');
+
     }
 
-    if (int.Parse(opcao.ToString()) == opcaoPC)
+    static char MenuFinal()
+
     {
-        Console.WriteLine("\n😀 Legal! Nós empatamos!");
-    }
-    else if (vitoria)
-    {
-        Console.WriteLine("\n😀 Parabéns! Você venceu.");
-    }
-    else
-    {
-        Console.WriteLine("\n😀 Haha, eu venci! Não foi dessa vez.");
+
+        Console.WriteLine("\nO que deseja fazer?");
+
+        Console.WriteLine("1 - Trocar jogador");
+
+        Console.WriteLine("2 - Ver estatísticas");
+
+        Console.WriteLine("0 - Sair");
+
+        return ValidarEntrada('0', '1', '2');
+
     }
 
-    return vitoria;
-}
+    // =========================
 
-void AtualizarEstatisticas(string nomeJogador, bool vitoria, char opcao, int opcaoPC)
-{
-    if (int.Parse(opcao.ToString()) == opcaoPC)
-    {
-        jogadores[nomeJogador] = (jogadores[nomeJogador].vitórias, jogadores[nomeJogador].empates + 1, jogadores[nomeJogador].derrotas);
-    }
-    else if (vitoria)
-    {
-        jogadores[nomeJogador] = (jogadores[nomeJogador].vitórias + 1, jogadores[nomeJogador].empates, jogadores[nomeJogador].derrotas);
-    }
-    else
-    {
-        jogadores[nomeJogador] = (jogadores[nomeJogador].vitórias, jogadores[nomeJogador].empates, jogadores[nomeJogador].derrotas + 1);
-    }
-}
+    // LÓGICA DO JOGO
 
-void ListarEstatisticasJogadores(ref char continuar)
-{
-    Console.WriteLine("\nJogadores e suas estatísticas:\n");
-    Console.WriteLine("===================================================================");
-    foreach (var jogador in jogadores)
+    // =========================
+
+    static int ObterEscolhaJogador()
+
     {
-        Console.WriteLine($"{jogador.Key}: {jogador.Value.vitórias} vitórias, {jogador.Value.empates} empates, {jogador.Value.derrotas} derrotas");
+
+        Console.WriteLine("\nEscolha:");
+
+        Console.WriteLine("0 - Pedra ✊");
+
+        Console.WriteLine("1 - Papel ✋");
+
+        Console.WriteLine("2 - Tesoura ✌");
+
+        char opcao = ValidarEntrada('0', '1', '2');
+
+        return int.Parse(opcao.ToString());
+
     }
-    Console.WriteLine("===================================================================\n");
 
-    Console.WriteLine("E agora? Quer iniciar uma nova partida?");
-    Console.WriteLine("1 - Sim ou 0 - Não");
+    static string DeterminarResultado(int jogador, int pc)
 
-    continuar = ValidarEntrada('0', '1');
+    {
+
+        Console.WriteLine($"\nVocê escolheu {TraduzirOpcao(jogador)}");
+
+        Console.WriteLine($"PC escolheu {TraduzirOpcao(pc)}");
+
+        if (jogador == pc)
+
+            return "Empate";
+
+        if ((jogador == 0 && pc == 2) ||
+
+            (jogador == 1 && pc == 0) ||
+
+            (jogador == 2 && pc == 1))
+
+            return "Vitória";
+
+        return "Derrota";
+
+    }
+
+    static string TraduzirOpcao(int opcao)
+
+    {
+
+        return opcao switch
+
+        {
+
+            0 => "Pedra ✊",
+
+            1 => "Papel ✋",
+
+            2 => "Tesoura ✌",
+
+            _ => ""
+
+        };
+
+    }
+
+    static void AtualizarEstatisticas(string jogador, string resultado)
+
+    {
+
+        var stats = jogadores[jogador];
+
+        switch (resultado)
+
+        {
+
+            case "Vitória":
+
+                stats.vitorias++;
+
+                break;
+
+            case "Empate":
+
+                stats.empates++;
+
+                break;
+
+            case "Derrota":
+
+                stats.derrotas++;
+
+                break;
+
+        }
+
+        jogadores[jogador] = stats;
+
+    }
+
+    // =========================
+
+    // UTILITÁRIOS
+
+    // =========================
+
+    static char ValidarEntrada(params char[] opcoesValidas)
+
+    {
+
+        char entrada = Console.ReadKey().KeyChar;
+
+        while (Array.IndexOf(opcoesValidas, entrada) == -1)
+
+        {
+
+            Console.WriteLine("\nOpção inválida. Tente novamente:");
+
+            entrada = Console.ReadKey().KeyChar;
+
+        }
+
+        return entrada;
+
+    }
+
+    static void ExibirEstatisticas()
+
+    {
+
+        Console.WriteLine("\n===== ESTATÍSTICAS =====");
+
+        foreach (var jogador in jogadores)
+
+        {
+
+            Console.WriteLine($"{jogador.Key}: " +
+
+                $"{jogador.Value.vitorias} Vitórias | " +
+
+                $"{jogador.Value.empates} Empates | " +
+
+                $"{jogador.Value.derrotas} Derrotas");
+
+        }
+
+        Console.WriteLine("=========================");
+
+    }
+
 }
